@@ -6,6 +6,8 @@
 
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
+include { MINIMAP2_ALIGN         } from '../modules/nf-core/minimap2/align/main'
+include { MINIMAP2_INDEX         } from '../modules/nf-core/minimap2/index/main'
 include { paramsSummaryMap       } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -20,12 +22,34 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_mito
 workflow MITOLORE {
 
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
+    ch_samplesheet  // channel: samplesheet read in from --input
+    ch_fasta        // value: extended reference to align to
 
     main:
 
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
+
+    //
+    // MODULE: Index reference to be used by MINIMAP2
+    //
+    MINIMAP2_INDEX (
+        ch_fasta
+    )
+    ch_versions = ch_versions.mix(MINIMAP2_INDEX.out.versions)
+
+    //
+    // MODULE: Index reference to be used by MINIMAP2
+    //
+    MINIMAP2_ALIGN (
+        ch_samplesheet,
+        MINIMAP2_INDEX.out.index,
+        true,           // Output bam?
+        "bai",          // BAM alignment index extension
+        false,          // Output cigar in PAF?
+        false           // Do we write output with >65335 operations?
+    )
+    ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
 
     //
     // MODULE: Run FastQC

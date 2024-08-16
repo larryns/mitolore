@@ -2,8 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/mitolore/master/nextflow_schema.json",
     "title": "nf-core/mitolore pipeline parameters",
-    "description": "Workflow for calling mitochondrial DNA (mtDNA) variants from HiFi 
-sequencing data.",
+    "description": "Workflow for calling mitochondrial DNA (mtDNA) variants from HiFi sequencing data.",
     "type": "object",
     "definitions": {
         "input_output_options": {
@@ -41,6 +40,12 @@ sequencing data.",
                     "type": "string",
                     "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
                     "fa_icon": "fas fa-file-signature"
+                },
+                "extlen": {
+                    "type": "integer",
+                    "description": "The amount to extend the reference genome.",
+                    "fa_icon" : "fas fa-ruler-horizontal",
+                    "help_text": "This length should correspond half the length of the longest reads, but not longer than half the the length of the entire reference chromosome."
                 }
             }
         },

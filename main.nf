@@ -17,21 +17,19 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { MITOLORE  } from './workflows/mitolore'
+include { MITOLORE                } from './workflows/mitolore'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_mitolore_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mitolore_pipeline'
 
 include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_mitolore_pipeline'
-
+include { EXTENDREF               } from './modules/local/extendref'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     GENOME PARAMETER VALUES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// TODO nf-core: Remove this line if you don't need a FASTA file
-//   This is an example of how to use getGenomeAttribute() to fetch parameters
-//   from igenomes.config using `--genome`
+//   Use getGenomeAttribute() to fetch parameters from igenomes.config using `--genome`
 params.fasta = getGenomeAttribute('fasta')
 
 /*
@@ -45,16 +43,35 @@ params.fasta = getGenomeAttribute('fasta')
 //
 workflow NFCORE_MITOLORE {
 
+//TODO: Add MINIMAP2 align and map modules to the MITOLORE workflow
+
     take:
     samplesheet // channel: samplesheet read in from --input
+    fasta       // params.fasta - the input genome
+    extlen      // params.extlen - how much to extend the reference
 
     main:
+
+    //
+    // Create the extended reference genome
+    //
+
+    // Fasta doesn't have any meta information, so we'll add the
+    // file basename as the meta. You can also use Channel.fromFilePairs
+    // instead of fromPath.
+    fasta = Channel.fromPath(fasta, checkIfExists: true)
+        .map { file -> [ file.getBaseName(), file ] }
+    EXTENDREF (
+        fasta,
+        extlen
+    )
 
     //
     // WORKFLOW: Run pipeline
     //
     MITOLORE (
-        samplesheet
+        samplesheet,
+        EXTENDREF.out.fasta
     )
 
     emit:
@@ -88,7 +105,9 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     NFCORE_MITOLORE (
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.samplesheet,
+        params.fasta,
+        params.extlen
     )
 
     //
