@@ -40,7 +40,7 @@ process EXTENDREF {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        extendref: \$(extend_ref --version |cut -d' ' -f2)
+        extendref: \$(extend_ref --version |& cut -d' ' -f2)
     END_VERSIONS
     """
 }

@@ -7,7 +7,7 @@
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { MINIMAP2_ALIGN         } from '../modules/nf-core/minimap2/align/main'
-include { MINIMAP2_INDEX         } from '../modules/nf-core/minimap2/index/main'
+include { MTLINTOCIRC            } from '../modules/local/mtlintocirc'
 include { paramsSummaryMap       } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -33,23 +33,23 @@ workflow MITOLORE {
     //
     // MODULE: Index reference to be used by MINIMAP2
     //
-    MINIMAP2_INDEX (
-        ch_fasta
-    )
-    ch_versions = ch_versions.mix(MINIMAP2_INDEX.out.versions)
-
-    //
-    // MODULE: Index reference to be used by MINIMAP2
-    //
     MINIMAP2_ALIGN (
-        ch_samplesheet,
-        MINIMAP2_INDEX.out.index,
-        true,           // Output bam?
-        "bai",          // BAM alignment index extension
-        false,          // Output cigar in PAF?
-        false           // Do we write output with >65335 operations?
+        ch_samplesheet,     // Input fastq
+        ch_fasta.first(),   // Reference. This is a queue channel so convert to value
+        true,               // Output bam?
+        "bai",              // BAM alignment index extension
+        false,              // Output cigar in PAF?
+        false               // Do we write output with >65335 operations?
     )
     ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
+
+    //
+    // MODULE: MTLINTOCIRC fixes the bam file so that the alignment co-ordinates are
+    //         adjusted to the original ref len.
+    //
+    MTLINTOCIRC(
+        MINIMAP2_ALIGN.out.bam
+    )
 
     //
     // MODULE: Run FastQC

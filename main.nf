@@ -43,8 +43,6 @@ params.fasta = getGenomeAttribute('fasta')
 //
 workflow NFCORE_MITOLORE {
 
-//TODO: Add MINIMAP2 align and map modules to the MITOLORE workflow
-
     take:
     samplesheet // channel: samplesheet read in from --input
     fasta       // params.fasta - the input genome
@@ -74,7 +72,7 @@ workflow NFCORE_MITOLORE {
         EXTENDREF.out.fasta
     )
 
-    emit:
+   emit:
     multiqc_report = MITOLORE.out.multiqc_report // channel: /path/to/multiqc_report.html
 
 }
@@ -102,7 +100,7 @@ workflow {
     )
 
     //
-    // WORKFLOW: Run main workflow
+    // WORKFLOW: Run preparation workflow
     //
     NFCORE_MITOLORE (
         PIPELINE_INITIALISATION.out.samplesheet,
@@ -110,6 +108,7 @@ workflow {
         params.extlen
     )
 
+    //
     //
     // SUBWORKFLOW: Run completion tasks
     //
