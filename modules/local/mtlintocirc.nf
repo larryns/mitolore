@@ -23,11 +23,10 @@ process MTLINTOCIRC {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     mt_lintocirc \\
-        --output ${prefix}.lin.bam \\
-        --ref ${refName} \\
+        --ref "${refName}_ext" \\
         --reflen ${reflen} \\
         --targetref ${refName} \\
-         ${bam}
+         ${bam} | samtools addreplacerg -r 'ID:${meta.id}' -r 'SM:${meta.id}' -o ${prefix}.lin.bam -
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

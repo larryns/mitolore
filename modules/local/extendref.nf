@@ -22,9 +22,10 @@ process EXTENDREF {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta}_ext"
+
     """
     samtools faidx ${fasta} ${args} | \\
-        extend_ref --ext ${extlen} | \\
+        extend_ref --ext ${extlen} --header ${args}_ext | \\
         gzip -c > ${prefix}.fa.gz \\
 
     cat <<-END_VERSIONS > versions.yml

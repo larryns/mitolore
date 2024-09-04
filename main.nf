@@ -69,7 +69,8 @@ workflow NFCORE_MITOLORE {
     //
     MITOLORE (
         samplesheet,
-        EXTENDREF.out.fasta
+        EXTENDREF.out.fasta,
+        fasta
     )
 
    emit:

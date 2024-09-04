@@ -8,6 +8,7 @@ include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { MINIMAP2_ALIGN         } from '../modules/nf-core/minimap2/align/main'
 include { MTLINTOCIRC            } from '../modules/local/mtlintocirc'
+include { SAMTOOLS_SORT          } from '../modules/nf-core/samtools/sort/main'
 include { paramsSummaryMap       } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -23,7 +24,8 @@ workflow MITOLORE {
 
     take:
     ch_samplesheet  // channel: samplesheet read in from --input
-    ch_fasta        // value: extended reference to align to
+    ch_ref_fasta    // value: extended reference to align to
+    genome_fasta    // genome fasta file, used for sorting
 
     main:
 
@@ -35,7 +37,7 @@ workflow MITOLORE {
     //
     MINIMAP2_ALIGN (
         ch_samplesheet,     // Input fastq
-        ch_fasta.first(),   // Reference. This is a queue channel so convert to value
+        ch_ref_fasta.first(),   // Reference. This is a queue channel so convert to value
         true,               // Output bam?
         "bai",              // BAM alignment index extension
         false,              // Output cigar in PAF?
@@ -49,6 +51,14 @@ workflow MITOLORE {
     //
     MTLINTOCIRC(
         MINIMAP2_ALIGN.out.bam
+    )
+
+    //
+    // MODULE SAMTOOLS_SORT: Sort the output bam.
+    //
+    SAMTOOLS_SORT(
+        MTLINTOCIRC.out.bam,
+        genome_fasta.first()
     )
 
     //
