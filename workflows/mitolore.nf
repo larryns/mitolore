@@ -43,7 +43,6 @@ workflow MITOLORE {
         false,              // Output cigar in PAF?
         false               // Do we write output with >65335 operations?
     )
-    ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
 
     //
     // MODULE: MTLINTOCIRC fixes the bam file so that the alignment co-ordinates are
@@ -58,7 +57,8 @@ workflow MITOLORE {
     //
     SAMTOOLS_SORT(
         MTLINTOCIRC.out.bam,
-        genome_fasta.first()
+        genome_fasta.first(),
+	"bai"
     )
 
     //
@@ -68,7 +68,6 @@ workflow MITOLORE {
         ch_samplesheet
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
     //
     // Collate and save software versions
@@ -117,7 +116,9 @@ workflow MITOLORE {
         ch_multiqc_files.collect(),
         ch_multiqc_config.toList(),
         ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
+        ch_multiqc_logo.toList(),
+	Channel.empty(),
+	Channel.empty()
     )
 
     emit:
